@@ -4,9 +4,7 @@ import com.nm.novamart.Enum.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Data
@@ -27,7 +25,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-
+    @OneToMany(mappedBy = "user",  cascade = CascadeType.ALL)
     private List<Order> orders =  new ArrayList<>();
 
 }
