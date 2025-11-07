@@ -1,6 +1,7 @@
 package com.nm.novamart.Service;
 
 import com.nm.novamart.Dto.ProductRequestDto;
+import com.nm.novamart.Dto.ProductUpdateReqDto;
 import com.nm.novamart.Entity.Product;
 import com.nm.novamart.Mapper.ProductMapper;
 import com.nm.novamart.Repository.ProductRepository;
@@ -25,16 +26,25 @@ public class ProductServiceImpl {
         return productRepository.save(newProduct);
     }
 
-    public Product updateProduct(UUID id, ProductRequestDto productReqDto) {
-        if((productRepository.findById(id).isEmpty())) {
+    public Product updateProduct(ProductUpdateReqDto productReqDto) {
+        if((productRepository.findById(productReqDto.getId()).isEmpty())) {
             throw new RuntimeException("Product not found");
         }
-        Product newProduct =  productMapper.toProduct(productReqDto);
-        return productRepository.save(newProduct);
+        Product product =  productRepository.findById(productReqDto.getId()).get();
+
+        Product updateProduct = productMapper.updateProduct(product, productReqDto);
+        return productRepository.save(updateProduct);
     }
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    public void deleteProduct(UUID productId) {
+        if(productRepository.findById(productId).isEmpty()) {
+            throw new RuntimeException("Product not found");
+        }
+        productRepository.deleteById(productId);
     }
 
 }

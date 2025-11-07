@@ -1,8 +1,8 @@
 package com.nm.novamart.Mapper;
 
 import com.nm.novamart.Dto.ProductRequestDto;
+import com.nm.novamart.Dto.ProductUpdateReqDto;
 import com.nm.novamart.Entity.Product;
-import jakarta.persistence.Entity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +19,18 @@ public class ProductMapper {
                 .quantity(productReqDto.getQuantity())
                 .category(productReqDto.getCategory())
                 .build();
+    }
+
+    public static Product updateProduct(Product product,ProductUpdateReqDto productUpdateReqDto) {
+        if(productUpdateReqDto == null ||  product == null) {
+            return null;
+        }
+        product.setName(productUpdateReqDto.getName());
+        product.setDescription(productUpdateReqDto.getDescription());
+        product.setPrice(productUpdateReqDto.getPrice());
+        product.setQuantity(productUpdateReqDto.getQuantity());
+        product.setCategory(productUpdateReqDto.getCategory());
+        return product;
     }
 
 }
