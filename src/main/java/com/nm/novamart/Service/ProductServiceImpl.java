@@ -7,32 +7,36 @@ import com.nm.novamart.Mapper.ProductMapper;
 import com.nm.novamart.Repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductServiceImpl {
 
     private final ProductRepository productRepository;
-    private final ProductMapper productMapper;
 
     public Product addProduct(ProductRequestDto productReqDto) {
-        if(!(productReqDto.getName().isEmpty())){
+        if(productRepository.existByName(productReqDto.getName())) {
             throw new RuntimeException("Product Already Exist");
         }
-        Product newProduct =  productMapper.toProduct(productReqDto);
+        Product newProduct =  ProductMapper.toProduct(productReqDto);
         return productRepository.save(newProduct);
     }
 
     public Product updateProduct(ProductUpdateReqDto productReqDto) {
-        if((productRepository.findById(productReqDto.getId()).isEmpty())) {
-            throw new RuntimeException("Product not found");
-        }
-        Product product =  productRepository.findById(productReqDto.getId()).get();
 
-        Product updateProduct = productMapper.updateProduct(product, productReqDto);
+        Product product =  productRepository.findById(productReqDto.getId())
+                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+
+        if(productReqDto.getName().equals(product.getName()) || productRepository.existByName(productReqDto.getName())) {
+            throw new RuntimeException("Product Name Already Exist");
+        }
+
+        Product updateProduct = ProductMapper.updateProduct(product, productReqDto);
         return productRepository.save(updateProduct);
     }
 
