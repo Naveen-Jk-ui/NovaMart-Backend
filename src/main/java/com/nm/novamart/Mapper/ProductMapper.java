@@ -2,6 +2,8 @@ package com.nm.novamart.Mapper;
 
 import com.nm.novamart.Dto.ProductRequestDto;
 import com.nm.novamart.Dto.ProductUpdateReqDto;
+import com.nm.novamart.Entity.Cart;
+import com.nm.novamart.Entity.CartItems;
 import com.nm.novamart.Entity.Product;
 import org.springframework.stereotype.Component;
 
@@ -32,5 +34,4 @@ public class ProductMapper {
         product.setCategory(productUpdateReqDto.getCategory());
         return product;
     }
-
 }

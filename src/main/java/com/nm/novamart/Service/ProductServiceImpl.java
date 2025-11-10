@@ -20,7 +20,7 @@ public class ProductServiceImpl {
     private final ProductRepository productRepository;
 
     public Product addProduct(ProductRequestDto productReqDto) {
-        if(productRepository.existByName(productReqDto.getName())) {
+        if(productRepository.existsByName(productReqDto.getName())) {
             throw new RuntimeException("Product Already Exist");
         }
         Product newProduct =  ProductMapper.toProduct(productReqDto);
@@ -32,7 +32,7 @@ public class ProductServiceImpl {
         Product product =  productRepository.findById(productReqDto.getId())
                 .orElseThrow(() -> new RuntimeException("Product Not Found"));
 
-        if(productReqDto.getName().equals(product.getName()) || productRepository.existByName(productReqDto.getName())) {
+        if(productReqDto.getName().equals(product.getName()) || productRepository.existsByName(productReqDto.getName())) {
             throw new RuntimeException("Product Name Already Exist");
         }
 
