@@ -2,7 +2,9 @@ package com.nm.novamart.Service;
 
 import com.nm.novamart.Dto.*;
 import com.nm.novamart.Entity.*;
-import com.nm.novamart.Exeptions.UserNotFoundExeption;
+import com.nm.novamart.Exeptions.InsufficientStockException;
+import com.nm.novamart.Exeptions.ProductNotFoundException;
+import com.nm.novamart.Exeptions.UserNotFoundException;
 import com.nm.novamart.Mapper.CartItemMapper;
 import com.nm.novamart.Repository.*;
 import com.nm.novamart.Utility.PriceCalculator;
@@ -26,13 +28,13 @@ public class CartServiceImpl {
     public void addToCart(UUID userId, UUID productId, int quantity) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundExeption(userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found!"));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
         if(product.getQuantity() < quantity || quantity <= 0) {
-            throw new RuntimeException("Invalid quantity");
+            throw new InsufficientStockException(product.getName(),product.getQuantity(),quantity);
         }
 
         if(user.getCart()==null){
@@ -49,7 +51,6 @@ public class CartServiceImpl {
 
         if(!(existingItem == null)) {
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
-            existingItem.setSubtotal(product.getPrice()*quantity);
 
         }else {
             CartItems newItem = CartItemMapper.toCartItem(product, quantity, user);
@@ -65,7 +66,7 @@ public class CartServiceImpl {
 
     public List<CartItemResponseDto> getCartItems(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundExeption(userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         Cart cart = user.getCart();
 
@@ -76,22 +77,21 @@ public class CartServiceImpl {
     public List<CartItemResponseDto> updateCartItem(CartRequestDto cartRequestDto, UUID userId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundExeption(userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         Cart cart = user.getCart();
         Product product = productRepository.findById(cartRequestDto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found!"));
+                .orElseThrow(() -> new ProductNotFoundException(cartRequestDto.getProductId()));
 
         if(product.getQuantity() < cartRequestDto.getQuantity() ||  product.getQuantity() <= 0) {
-            throw new RuntimeException("Invalid quantity");
+            throw new InsufficientStockException(product.getName(),product.getQuantity(),cartRequestDto.getQuantity());
         }
 
         CartItems cartItem = cart.getItems().stream()
                         .filter(cartItems -> cartItems.getProduct().getId().equals(cartRequestDto.getProductId()))
                         .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Product not found!"));
+                        .orElseThrow(() -> new ProductNotFoundException(cartRequestDto.getProductId()));
 
         cartItem.setQuantity(cartRequestDto.getQuantity());
-        cartItem.setSubtotal(product.getPrice()*cartRequestDto.getQuantity());
 
         double total = PriceCalculator.getTotalPrice(user.getCart());
         user.getCart().setTotalPrice(total);
@@ -101,6 +101,14 @@ public class CartServiceImpl {
 
         return CartItemMapper.toCartResponse(cart);
 
+    }
+
+    public void updateAllCartItems(Product product){
+        List<CartItems> allCartItems = cartItemRepository.findByProduct(product);
+        for(CartItems cartItem : allCartItems) {
+            cartItem.prePersist();
+            cartItemRepository.save(cartItem);
+        }
     }
 
 }

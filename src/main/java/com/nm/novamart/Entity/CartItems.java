@@ -28,4 +28,19 @@ public class CartItems {
     private int quantity;
 
     private double subtotal;
+
+    private void calculateSubTotal() {
+        if(this.product != null && this.product.getPrice() > 0 && this.quantity > 0) {
+            this.subtotal = this.product.getPrice() * this.quantity;
+        } else{
+            this.subtotal = 0;
+        }
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        calculateSubTotal();
+    }
+
 }
