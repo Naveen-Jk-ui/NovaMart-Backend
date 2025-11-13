@@ -22,6 +22,7 @@ public class ProductServiceImpl {
     private final ProductRepository productRepository;
     private final CartServiceImpl cartService;
 
+    @Transactional
     public Product addProduct(ProductRequestDto productReqDto) {
         if(productRepository.existsByName(productReqDto.getName())) {
             throw new DuplicateProductException(productReqDto.getName());
@@ -30,6 +31,7 @@ public class ProductServiceImpl {
         return productRepository.save(newProduct);
     }
 
+    @Transactional
     public Product updateProduct(ProductUpdateReqDto productReqDto) {
 
         Product product =  productRepository.findById(productReqDto.getId())
@@ -46,10 +48,7 @@ public class ProductServiceImpl {
         return productRepository.save(updateProduct);
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
+    @Transactional
     public void deleteProduct(UUID productId) {
         if(productRepository.findById(productId).isEmpty()) {
             throw new ProductNotFoundException(productId);
@@ -57,4 +56,21 @@ public class ProductServiceImpl {
         productRepository.deleteById(productId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Product getProductByName(String productName) {
+
+        if (!(productRepository.existsByNameIgnoreCase(productName))) {
+            throw new ProductNotFoundException(productName);
+        }
+        return productRepository.getByNameIgnoreCase(productName);
+    }
+
+    public List<Product> getProductsByCategory(String category) {
+        return productRepository.getProductByCategoryIgnoreCase(category);
+    }
 }

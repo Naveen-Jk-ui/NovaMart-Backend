@@ -1,13 +1,11 @@
 package com.nm.novamart.Controller;
 
 
+import com.nm.novamart.Dto.CartItemDeleteRequestDto;
 import com.nm.novamart.Dto.CartItemResponseDto;
-import com.nm.novamart.Dto.CartRequestDto;
-import com.nm.novamart.Entity.Cart;
-import com.nm.novamart.Entity.CartItems;
+import com.nm.novamart.Dto.CartItemRequestDto;
 import com.nm.novamart.Entity.Product;
 import com.nm.novamart.Repository.ProductRepository;
-import com.nm.novamart.Repository.UserRepository;
 import com.nm.novamart.Service.CartServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +22,6 @@ import java.util.UUID;
 public class CartController {
     private final CartServiceImpl cartService;
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
 
     @GetMapping("{userId}")
     public ResponseEntity<List<CartItemResponseDto>> getUserCart(@PathVariable UUID userId) {
@@ -33,15 +30,21 @@ public class CartController {
     }
 
     @PostMapping("{userId}")
-    public ResponseEntity<Product> addToCart(@RequestBody CartRequestDto cartRequestDto,  @PathVariable UUID userId) {
-        cartService.addToCart(userId, cartRequestDto.getProductId(), cartRequestDto.getQuantity());
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(productRepository.findById(cartRequestDto.getProductId()).get());
+    public ResponseEntity<Product> addToCart(@RequestBody CartItemRequestDto cartItemRequestDto, @PathVariable UUID userId) {
+        cartService.addToCart(userId, cartItemRequestDto.getProductId(), cartItemRequestDto.getQuantity());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(productRepository.findById(cartItemRequestDto.getProductId()).get());
     }
 
     @PutMapping("{userId}")
-    public ResponseEntity<List<CartItemResponseDto>> updateCartItems(@RequestBody CartRequestDto cartRequestDto,  @PathVariable UUID userId) {
-        List<CartItemResponseDto> cartItems = cartService.updateCartItem(cartRequestDto,  userId);
+    public ResponseEntity<List<CartItemResponseDto>> updateCartItems(@RequestBody CartItemRequestDto cartItemRequestDto, @PathVariable UUID userId) {
+        List<CartItemResponseDto> cartItems = cartService.updateCartItem(cartItemRequestDto,  userId);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(cartItems);
+    }
+
+    @DeleteMapping("{userId}")
+    public ResponseEntity<CartItemDeleteRequestDto> deleteCartItems(@PathVariable UUID userId, @RequestBody CartItemDeleteRequestDto deleteRequest) {
+        cartService.deleteCartItems(userId, deleteRequest);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
 
 }

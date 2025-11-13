@@ -25,6 +25,7 @@ public class CartServiceImpl {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
 
+    @Transactional
     public void addToCart(UUID userId, UUID productId, int quantity) {
 
         User user = userRepository.findById(userId)
@@ -64,6 +65,7 @@ public class CartServiceImpl {
 
     }
 
+    @Transactional(readOnly = true)
     public List<CartItemResponseDto> getCartItems(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -74,24 +76,24 @@ public class CartServiceImpl {
     }
 
     @Transactional
-    public List<CartItemResponseDto> updateCartItem(CartRequestDto cartRequestDto, UUID userId) {
+    public List<CartItemResponseDto> updateCartItem(CartItemRequestDto cartItemRequestDto, UUID userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
         Cart cart = user.getCart();
-        Product product = productRepository.findById(cartRequestDto.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException(cartRequestDto.getProductId()));
+        Product product = productRepository.findById(cartItemRequestDto.getProductId())
+                .orElseThrow(() -> new ProductNotFoundException(cartItemRequestDto.getProductId()));
 
-        if(product.getQuantity() < cartRequestDto.getQuantity() ||  product.getQuantity() <= 0) {
-            throw new InsufficientStockException(product.getName(),product.getQuantity(),cartRequestDto.getQuantity());
+        if(product.getQuantity() < cartItemRequestDto.getQuantity() ||  product.getQuantity() <= 0) {
+            throw new InsufficientStockException(product.getName(),product.getQuantity(), cartItemRequestDto.getQuantity());
         }
 
         CartItems cartItem = cart.getItems().stream()
-                        .filter(cartItems -> cartItems.getProduct().getId().equals(cartRequestDto.getProductId()))
+                        .filter(cartItems -> cartItems.getProduct().getId().equals(cartItemRequestDto.getProductId()))
                         .findFirst()
-                        .orElseThrow(() -> new ProductNotFoundException(cartRequestDto.getProductId()));
+                        .orElseThrow(() -> new ProductNotFoundException(cartItemRequestDto.getProductId()));
 
-        cartItem.setQuantity(cartRequestDto.getQuantity());
+        cartItem.setQuantity(cartItemRequestDto.getQuantity());
 
         double total = PriceCalculator.getTotalPrice(user.getCart());
         user.getCart().setTotalPrice(total);
@@ -103,12 +105,32 @@ public class CartServiceImpl {
 
     }
 
+    @Transactional
     public void updateAllCartItems(Product product){
         List<CartItems> allCartItems = cartItemRepository.findByProduct(product);
         for(CartItems cartItem : allCartItems) {
             cartItem.prePersist();
             cartItemRepository.save(cartItem);
         }
+    }
+
+    @Transactional
+    public void deleteCartItems(UUID userId, CartItemDeleteRequestDto deleteRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        Cart cart = user.getCart();
+
+        CartItems cartItem = cart.getItems().stream()
+                .filter(item -> item.getProduct().getId().equals(deleteRequest.getProductId()))
+                .findFirst()
+                .orElseThrow(() -> new ProductNotFoundException(deleteRequest.getProductId()));
+
+        cart.getItems().remove(cartItem);
+        cartItemRepository.delete(cartItem);
+
+        cartRepository.save(user.getCart());
+        cart.setTotalPrice(PriceCalculator.getTotalPrice(user.getCart()));
+
     }
 
 }

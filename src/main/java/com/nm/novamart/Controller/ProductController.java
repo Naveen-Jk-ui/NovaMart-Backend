@@ -40,6 +40,16 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.FOUND).body(productService.getAllProducts());
     }
 
+    @GetMapping("{productName}")
+    public ResponseEntity<Product> getProductByName(@PathVariable String productName) {
+        return ResponseEntity.status(HttpStatus.FOUND).body(productService.getProductByName(productName));
+    }
+
+    @GetMapping("cate/{category}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable String category) {
+        return ResponseEntity.status(HttpStatus.FOUND).body(productService.getProductsByCategory(category));
+    }
+
     @Transactional
     @DeleteMapping("{id}")
     public ResponseEntity<Product> deleteProduct(@PathVariable UUID id) {

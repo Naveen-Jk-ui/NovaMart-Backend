@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CartRequestDto {
+public class CartItemRequestDto {
 
     @NotNull
     private UUID productId;
